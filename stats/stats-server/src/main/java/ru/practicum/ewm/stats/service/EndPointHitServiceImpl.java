@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.dto.stats.EndPointHitDto;
 import ru.practicum.ewm.dto.stats.ViewStatsDto;
 import ru.practicum.ewm.dto.stats.ViewStatsParamDto;
-import ru.practicum.ewm.stats.model.EndPointHit;
 import ru.practicum.ewm.stats.model.EndPointHitMapper;
 
 import ru.practicum.ewm.stats.model.EndPointHitStats;
@@ -15,22 +14,22 @@ import ru.practicum.ewm.stats.utills.StatsDateTimeFormatter;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 @Transactional(readOnly = true)
-public class EndPointHitServiceImpl implements EndPointHitService{
+public class EndPointHitServiceImpl implements EndPointHitService {
 
     private final EndPointHitRepository endPointHitRepository;
+
     @Transactional
     @Override
     public void save(EndPointHitDto endPointHitDto) {
         endPointHitRepository.save(EndPointHitMapper.toEndPointHit(endPointHitDto));
     }
+
     @Override
     public List<ViewStatsDto> getStats(ViewStatsParamDto viewStatsParamDto) {
         viewStatsParamDto.setStart(URLDecoder.decode(viewStatsParamDto.getStart(), StandardCharsets.UTF_8));
@@ -60,6 +59,7 @@ public class EndPointHitServiceImpl implements EndPointHitService{
                 .stream()
                 .map(EndPointHitMapper::toViewStatsDto)
                 .collect(Collectors.toList());
+
         return viewStats;
     }
 
