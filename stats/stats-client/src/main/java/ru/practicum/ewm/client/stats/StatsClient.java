@@ -29,17 +29,17 @@ public class StatsClient {
     private final HttpClient httpClient;
     private final String application;
     private final String statsServiceUri;
-    private final ObjectMapper json;
+    private final ObjectMapper mapper;
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
     public StatsClient(@Value("${stats-service.uri}") String statsServiceUri,
                         @Value("${spring.application.name}") String application,
-                        ObjectMapper json) {
+                        ObjectMapper mapper) {
          this.application = application;
          this.statsServiceUri = statsServiceUri;
-         this.json = json;
+         this.mapper = mapper;
          this.httpClient = HttpClient.newBuilder()
                  .connectTimeout(Duration.ofSeconds(3))
                  .build();
@@ -56,14 +56,14 @@ public class StatsClient {
         try {
             HttpRequest.BodyPublisher bodyPublisher = HttpRequest
                     .BodyPublishers
-                    .ofString(json.writeValueAsString(endPointHitDto));
+                    .ofString(mapper.writeValueAsString(endPointHitDto));
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(statsServiceUri + "/hit"))
                     .POST(bodyPublisher)
                     .header(HttpHeaders.CONTENT_TYPE, "application/json")
                     .header(HttpHeaders.ACCEPT, "application/json")
                     .build();
-            HttpResponse<Void> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
+            httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
 
         } catch (Exception e) {
             log.error("Не удалось сохранить информацию о том, что на uri конкретного сервиса был отправлен " +
@@ -84,7 +84,7 @@ public class StatsClient {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (HttpStatus.valueOf(response.statusCode()).is2xxSuccessful()) {
-                return json.readValue(response.body(), new TypeReference<>(){});
+                return mapper.readValue(response.body(), new TypeReference<>(){});
             }
 
         } catch (Exception e) {

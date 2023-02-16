@@ -55,12 +55,12 @@ public class EndPointHitServiceImpl implements EndPointHitService {
                             StatsDateTimeFormatter.stringToDateTime(viewStatsParamDto.getStart()),
                             StatsDateTimeFormatter.stringToDateTime(viewStatsParamDto.getEnd()));
         }
-        List<ViewStatsDto> viewStats = endPointHits
+
+        return endPointHits
                 .stream()
                 .map(EndPointHitMapper::toViewStatsDto)
                 .collect(Collectors.toList());
 
-        return viewStats;
     }
 
 }
