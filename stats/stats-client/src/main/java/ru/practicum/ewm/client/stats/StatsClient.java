@@ -66,6 +66,8 @@ public class StatsClient {
             HttpResponse<Void> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.discarding());
 
         } catch (Exception e) {
+            log.error("Не удалось сохранить информацию о том, что на uri конкретного сервиса был отправлен " +
+                    "запрос пользователем" , e);
 
         }
     }
