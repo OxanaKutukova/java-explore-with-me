@@ -3,6 +3,7 @@ package ru.practicum.ewm.stats.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.stats.EndPointHitDto;
@@ -24,6 +25,7 @@ public class EndPointHitController {
 
     //Сохранение информации о том, что на uri конкретного сервиса был отправлен запрос пользователем
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public void save(@RequestBody EndPointHitDto endPointHitDto) {
         log.info("StatsServer: Сохранить информацию {}", endPointHitDto);
         endPointHitService.save(endPointHitDto);

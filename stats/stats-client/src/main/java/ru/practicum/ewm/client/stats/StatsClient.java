@@ -3,7 +3,6 @@ package ru.practicum.ewm.client.stats;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,22 +26,21 @@ import java.util.List;
 public class StatsClient {
 
     private final HttpClient httpClient;
+
     private final String application;
+
     private final String statsServiceUri;
     private final ObjectMapper mapper;
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-
-    public StatsClient(@Value("${stats-service.uri}") String statsServiceUri,
-                        @Value("${spring.application.name}") String application,
-                        ObjectMapper mapper) {
-         this.application = application;
-         this.statsServiceUri = statsServiceUri;
-         this.mapper = mapper;
-         this.httpClient = HttpClient.newBuilder()
-                 .connectTimeout(Duration.ofSeconds(3))
-                 .build();
+    public StatsClient(String statsServiceUri, String application, ObjectMapper mapper) {
+        this.application = application;
+        this.statsServiceUri = statsServiceUri;
+        this.mapper = mapper;
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
     }
 
     public void addHit(HttpServletRequest request) {
