@@ -43,7 +43,7 @@ public class EventController {
     }
 
     //Admin Поиск событий
-    @GetMapping("/admin/events")
+/*    @GetMapping("/admin/events")
     public List<EventFullDto> getAllAdmin(@RequestParam Optional<List<Long>> users,
                                           @RequestParam Optional<List<String>> states,
                                           @RequestParam Optional<List<Long>> categories,
@@ -61,17 +61,35 @@ public class EventController {
         return events;
     }
 
+ */
+    @GetMapping("/admin/events")
+    public List<EventFullDto> getAllAdmin(@RequestParam (required = false) List<Long> users,
+                                          @RequestParam (required = false) List<String> states,
+                                          @RequestParam (required = false) List<Long> categories,
+                                          @RequestParam (required = false) Optional<String> rangeStart,
+                                          @RequestParam (required = false) Optional<String> rangeEnd,
+                                          @RequestParam(name = "from", defaultValue = "0") int from,
+                                          @RequestParam(name = "size", defaultValue = "10") int size) {
+
+        log.info("MainServer: Admin Получить все события");
+        final Pageable pageable = PageRequest.of(from / size, size);
+        List<EventFullDto> events = eventService.getAllAdmin(users, states, categories, rangeStart, rangeEnd, pageable);
+        log.info("MainServer: Admin Получить все события. Результат = {}", events);
+
+        return events;
+    }
+
     //Public Получение событий с возможностью фильтрации
     @GetMapping("/events")
-    public List<EventShortDto> getAllPublic(@RequestParam Optional<String> text,
-                                      @RequestParam Optional<List<Long>> categories,
+    public List<EventShortDto> getAllPublic(@RequestParam (required = false) Optional<String> text,
+                                      @RequestParam (required = false) List<Long> categories,
                                       @RequestParam Optional<Boolean> paid,
                                       @RequestParam Optional<String> rangeStart,
                                       @RequestParam Optional<String> rangeEnd,
                                       @RequestParam Optional<Boolean> onlyAvailable,
                                       @RequestParam Optional<String> sort,
-                                      @RequestParam(defaultValue = "0") int from,
-                                      @RequestParam(defaultValue = "20") int size,
+                                      @RequestParam(name = "from", defaultValue = "0") int from,
+                                      @RequestParam(name = "size", defaultValue = "10") int size,
                                       HttpServletRequest httpRequest) {
 
         log.info("MainServer: Public Получить все события с возможностью фильтрации");

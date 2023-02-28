@@ -2,6 +2,7 @@ package ru.practicum.ewm.service.compilation.dto;
 
 import lombok.*;
 
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @NoArgsConstructor
@@ -15,5 +16,6 @@ public class UpdateCompilationDto {
     private List<Long> events;
     private boolean pinned;
 
+    @Size(min = 3, max = 120)
     private String title;
 }

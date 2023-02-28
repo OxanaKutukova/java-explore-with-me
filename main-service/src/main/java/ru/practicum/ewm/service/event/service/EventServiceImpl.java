@@ -69,27 +69,14 @@ public class EventServiceImpl implements EventService {
             event.setStatus(EventStatus.CANCELED);
         }
 
-        if (updateEventDto.getAnnotation() != null) {
-            event.setAnnotation(updateEventDto.getAnnotation());
-        }
-        if (updateEventDto.getCategory() != null) {
-            event.setCategory(getCategoryById(updateEventDto.getCategory()));
-        }
-        if (updateEventDto.getDescription() != null) {
-            event.setDescription(updateEventDto.getDescription());
-        }
-        if (updateEventDto.getEventDate() != null) {
-            event.setEventDate(MainServiceDateTimeFormatter.stringToDateTime(updateEventDto.getEventDate()));
-        }
-        if (updateEventDto.getPaid() != null) {
-            event.setPaid(updateEventDto.getPaid());
-        }
-        if (updateEventDto.getParticipantLimit() != 0) {
-            event.setParticipantLimit(updateEventDto.getParticipantLimit());
-        }
-        if (updateEventDto.getTitle() != null) {
-            event.setTitle(updateEventDto.getTitle());
-        }
+        updateEventFields(event,
+                updateEventDto.getAnnotation(),
+                updateEventDto.getCategory(),
+                updateEventDto.getDescription(),
+                updateEventDto.getEventDate(),
+                updateEventDto.getPaid(),
+                updateEventDto.getParticipantLimit(),
+                updateEventDto.getTitle());
         Optional.ofNullable(updateEventDto.getLocation()).ifPresent(event::setLocation);
         Optional.ofNullable(updateEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
 
@@ -99,33 +86,17 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getAllAdmin(Optional<List<Long>> usersOptional,
-                                          Optional<List<String>> statesOptional,
-                                          Optional<List<Long>> categoriesOptional,
-                                          Optional<String> rangeStartOptional,
-                                          Optional<String> rangeEndOptional,
+    public List<EventFullDto> getAllAdmin(List<Long> users,
+                                          List<String> states,
+                                          List<Long> categories,
+                                          Optional<String> rangeStart,
+                                          Optional<String> rangeEnd,
                                           Pageable pageable) {
 
         //Соберем фильтр из пришедших условий
-        BooleanBuilder builder = new BooleanBuilder();
-
-        usersOptional.ifPresent(users -> builder.and(QEvent.event.initiator.id.in(users)));
-
-        statesOptional.ifPresent(states -> builder.and(QEvent.event.status.in(
-                states.stream()
-                        .map(EventStatus::from)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))));
-
-        categoriesOptional.ifPresent(categories -> builder.and(QEvent.event.category.id.in(categories)));
-
-        rangeStartOptional.ifPresent(start -> builder.and(QEvent.event.eventDate
-                .after(MainServiceDateTimeFormatter.stringToDateTime(start))));
-
-        rangeEndOptional.ifPresent(end -> builder.and(QEvent.event.eventDate
-                .before(MainServiceDateTimeFormatter.stringToDateTime(end))));
-
-        List<Event> events = eventRepository.findAll(builder, pageable)
+        BooleanBuilder builder = makeBuilder(users, states, categories, Optional.empty(), Optional.empty(),
+                rangeStart, rangeEnd);
+         List<Event> events = eventRepository.findAll(builder, pageable)
                 .stream()
                 .collect(Collectors.toList());
 
@@ -136,13 +107,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getAllPublic(Optional<String> textOptional,
-                                            Optional<List<Long>> categoriesOptional,
-                                            Optional<Boolean> paidOptional,
-                                            Optional<String> rangeStartOptional,
-                                            Optional<String> rangeEndOptional,
-                                            Optional<Boolean> onlyAvailableOptional,
-                                            Optional<String> sortOptional,
+    public List<EventShortDto> getAllPublic(Optional<String> text,
+                                            List<Long> categories,
+                                            Optional<Boolean> paid,
+                                            Optional<String> rangeStart,
+                                            Optional<String> rangeEnd,
+                                            Optional<Boolean> onlyAvailable,
+                                            Optional<String> sort,
                                             HttpServletRequest httpRequest,
                                             Pageable pageable) {
 
@@ -154,26 +125,14 @@ public class EventServiceImpl implements EventService {
         }
 
         //Соберем фильтр из пришедших условий
-        BooleanBuilder builder = new BooleanBuilder();
-
-        textOptional.ifPresent(text -> builder.and(QEvent.event.annotation.likeIgnoreCase(text)
-                .or(QEvent.event.description.likeIgnoreCase(text))));
-
-        categoriesOptional.ifPresent(categories -> builder.and(QEvent.event.category.id.in(categories)));
-
-        paidOptional.ifPresent(paid -> builder.and(QEvent.event.paid.eq(paid)));
-
-        rangeStartOptional.ifPresent(start -> builder.and(QEvent.event.eventDate
-                .after(MainServiceDateTimeFormatter.stringToDateTime(start))));
-
-        rangeEndOptional.ifPresent(end -> builder.and(QEvent.event.eventDate
-                .before(MainServiceDateTimeFormatter.stringToDateTime(end))));
+        BooleanBuilder builder = makeBuilder(List.of(), List.of(), categories, text, paid,
+                rangeStart, rangeEnd);
 
         List<Event> events = eventRepository.findAll(builder, pageable)
                 .stream()
                 .collect(Collectors.toList());
 
-        //Начинаем сбор входных параметров для получения статистики
+        //Сбор входных параметров для получения статистики
         //Заполняем список uri
         final List<String> uris = events
                 .stream()
@@ -210,8 +169,8 @@ public class EventServiceImpl implements EventService {
         }
 
         //Сделаем сортировку, если она задана
-        if (sortOptional.isPresent()) {
-            switch (sortOptional.toString().toUpperCase()) {
+        if (sort.isPresent()) {
+            switch (sort.toString().toUpperCase()) {
                 case "EVENT_DATE":
                     events.sort(Comparator.comparing(Event::getEventDate));
                     break;
@@ -333,27 +292,14 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        if (updateEventUserRequest.getAnnotation() != null) {
-            event.setAnnotation(updateEventUserRequest.getAnnotation());
-        }
-        if (updateEventUserRequest.getCategory() != null) {
-            event.setCategory(getCategoryById(updateEventUserRequest.getCategory()));
-        }
-        if (updateEventUserRequest.getDescription() != null) {
-            event.setDescription(updateEventUserRequest.getDescription());
-        }
-        if (updateEventUserRequest.getEventDate() != null) {
-            event.setEventDate(MainServiceDateTimeFormatter.stringToDateTime(updateEventUserRequest.getEventDate()));
-        }
-        if (updateEventUserRequest.getPaid() != null) {
-            event.setPaid(updateEventUserRequest.getPaid());
-        }
-        if (updateEventUserRequest.getParticipantLimit() != 0) {
-            event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
-        }
-        if (updateEventUserRequest.getTitle() != null) {
-            event.setTitle(updateEventUserRequest.getTitle());
-        }
+        updateEventFields(event,
+                updateEventUserRequest.getAnnotation(),
+                updateEventUserRequest.getCategory(),
+                updateEventUserRequest.getDescription(),
+                updateEventUserRequest.getEventDate(),
+                updateEventUserRequest.getPaid(),
+                updateEventUserRequest.getParticipantLimit(),
+                updateEventUserRequest.getTitle());
 
         if (updateEventUserRequest.getStateAction().toUpperCase().equals("SEND_TO_REVIEW")) {
             event.setStatus(EventStatus.PENDING);
@@ -457,6 +403,71 @@ public class EventServiceImpl implements EventService {
                 .confirmedRequests(requestConfirmed)
                 .rejectedRequests(rejectedConfirmed)
                 .build();
+    }
+
+    private BooleanBuilder makeBuilder(List<Long> users,
+                                       List<String> states,
+                                       List<Long> categories,
+                                       Optional<String> text,
+                                       Optional<Boolean> paid,
+                                       Optional<String> rangeStart,
+                                       Optional<String> rangeEnd) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (users != null && !users.isEmpty()) {
+            builder.and(QEvent.event.initiator.id.in(users));
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            builder.and(QEvent.event.category.id.in(categories));
+        }
+
+        if (states != null && !states.isEmpty()) {
+            builder.and(QEvent.event.status.in(
+                    states.stream()
+                            .map(EventStatus::from)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList())));
+        }
+        text.ifPresent(textS -> builder.and(QEvent.event.annotation.likeIgnoreCase(textS)
+                .or(QEvent.event.description.likeIgnoreCase(textS))));
+
+        paid.ifPresent(paidS -> builder.and(QEvent.event.paid.eq(paidS)));
+
+        rangeStart.ifPresent(start -> builder.and(QEvent.event.eventDate
+                .after(MainServiceDateTimeFormatter.stringToDateTime(start))));
+
+        rangeEnd.ifPresent(end -> builder.and(QEvent.event.eventDate
+                .before(MainServiceDateTimeFormatter.stringToDateTime(end))));
+
+        return builder;
+
+    }
+
+    private void updateEventFields(Event event, String annotation, Long category, String description, String eventDate,
+                                   Boolean paid, int participantLimit, String title) {
+        if (annotation != null) {
+            event.setAnnotation(annotation);
+        }
+        if (category != null) {
+            event.setCategory(getCategoryById(category));
+        }
+        if (description != null) {
+            event.setDescription(description);
+        }
+        if (eventDate != null) {
+            event.setEventDate(MainServiceDateTimeFormatter.stringToDateTime(eventDate));
+        }
+        if (paid != null) {
+            event.setPaid(paid);
+        }
+        if (participantLimit != 0) {
+            event.setParticipantLimit(participantLimit);
+        }
+        if (title != null) {
+            event.setTitle(title);
+        }
     }
 
     private Event getEventById(Long eventId) {

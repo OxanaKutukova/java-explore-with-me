@@ -3,6 +3,7 @@ package ru.practicum.ewm.service.compilation.dto;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @NoArgsConstructor
@@ -17,5 +18,6 @@ public class NewCompilationDto {
     private boolean pinned;
 
     @NotBlank
+    @Size(min = 3, max = 120)
     private String title;
 }

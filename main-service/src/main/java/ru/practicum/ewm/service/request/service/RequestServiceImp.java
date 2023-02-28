@@ -36,9 +36,6 @@ public class RequestServiceImp implements RequestService {
     @Transactional
     public RequestDto create(Long userId, Long eventId) {
 
-       if (eventId == null) {
-            throw new BadRequestException("Значение ид события не может быть пустым");
-        }
         final User user = getUserById(userId);
         final Event event = getEventById(eventId);
 
@@ -112,11 +109,6 @@ public class RequestServiceImp implements RequestService {
 
     private Request getRequestById(Long requestId) {
         return  requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Заявка на участие не найдена или недоступна"));
-    }
-
-    private void throwIfNotExistRequest(Long requestId) {
-        requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Заявка на участие не найдена или недоступна"));
     }
 

@@ -12,12 +12,17 @@ public interface EventService {
 
     EventFullDto updateAdmin(Long eventId, UpdateEventDto updateEventDto);
 
-    List<EventFullDto> getAllAdmin(Optional<List<Long>> users, Optional<List<String>> states, Optional<List<Long>> categories, Optional<String> rangeStart, Optional<String> rangeEnd, Pageable pageable);
-
-    List<EventShortDto> getAllPublic(Optional<String> text, Optional<List<Long>> categories, Optional<Boolean> paid,
+    List<EventShortDto> getAllPublic(Optional<String> text, List<Long> categories, Optional<Boolean> paid,
                                      Optional<String> rangeStart, Optional<String> rangeEnd,
                                      Optional<Boolean> onlyAvailable, Optional<String> sort,
                                      HttpServletRequest httpRequest, Pageable pageable);
+
+    List<EventFullDto> getAllAdmin(List<Long> users,
+                                          List<String> states,
+                                          List<Long> categories,
+                                          Optional<String> rangeStart,
+                                          Optional<String> rangeEnd,
+                                          Pageable pageable);
 
     EventFullDto getPublicById(Long eventId, HttpServletRequest httpRequest);
 

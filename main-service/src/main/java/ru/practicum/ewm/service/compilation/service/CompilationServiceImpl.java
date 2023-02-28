@@ -34,9 +34,8 @@ public class CompilationServiceImpl implements CompilationService {
         final Compilation compilationS = compilationRepository.save(compilation);
 
         if (compilationS.getEvents().size() > 0) {
-            compilationS.getEvents().replaceAll(event -> eventRepository.findById(event.getId())
-                    .orElseThrow(() -> new NotFoundException("Событие не найдено или недоступно")));
-
+            compilationS.getEvents()
+                    .replaceAll(this::getEvent);
         }
 
         return CompilationMapper.toCompilationDto(compilationS);
@@ -107,6 +106,11 @@ public class CompilationServiceImpl implements CompilationService {
 
     private Event getEventById(Long eventId) {
         return  eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Событие не найдено или недоступно"));
+    }
+
+    private Event getEvent(Event event) {
+        return eventRepository.findById(event.getId())
                 .orElseThrow(() -> new NotFoundException("Событие не найдено или недоступно"));
     }
 }
