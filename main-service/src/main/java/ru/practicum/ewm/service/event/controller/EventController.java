@@ -42,26 +42,6 @@ public class EventController {
         return resEventFullDto;
     }
 
-    //Admin Поиск событий
-/*    @GetMapping("/admin/events")
-    public List<EventFullDto> getAllAdmin(@RequestParam Optional<List<Long>> users,
-                                          @RequestParam Optional<List<String>> states,
-                                          @RequestParam Optional<List<Long>> categories,
-                                          @RequestParam Optional<String> rangeStart,
-                                          @RequestParam Optional<String> rangeEnd,
-                                          @RequestParam(defaultValue = "0") int from,
-                                          @RequestParam(defaultValue = "20") int size,
-                                          HttpServletRequest httpRequest) {
-
-        log.info("MainServer: Admin Получить все события");
-        final Pageable pageable = PageRequest.of(from / size, size);
-        List<EventFullDto> events = eventService.getAllAdmin(users, states, categories, rangeStart, rangeEnd, pageable);
-        log.info("MainServer: Admin Получить все события. Результат = {}", events);
-
-        return events;
-    }
-
- */
     @GetMapping("/admin/events")
     public List<EventFullDto> getAllAdmin(@RequestParam (required = false) List<Long> users,
                                           @RequestParam (required = false) List<String> states,
