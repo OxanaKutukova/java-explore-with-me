@@ -44,7 +44,7 @@ public class CommentController {
     //Добавить комментарий пользователя на событие
     @PostMapping("/users/{userId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDto create(@PathVariable(required = true) Long userId,
+    public CommentDto create(@PathVariable Long userId,
                              @Valid @RequestParam(name = "eventId", required = true)  Long eventId,
                              @Valid @RequestBody NewCommentDto newCommentDto) {
         log.info("MainServer: Private Добавить новый комментарий {} от пользователя с id: {} на событие с id: {}",
@@ -117,7 +117,7 @@ public class CommentController {
 
     //Найти комментарии по содержанию
     @GetMapping("/comments/search")
-    public List<CommentDto> getByText(@RequestParam(required = true) String text,
+    public List<CommentDto> getByText(@RequestParam String text,
                                 @RequestParam(name = "from", defaultValue = "0") Integer from,
                                 @RequestParam(name = "size", defaultValue = "10") Integer size) {
         log.info("MainServer: Public Поиск комментариев по тексту: {}", text);

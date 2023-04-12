@@ -12,8 +12,8 @@ import ru.practicum.ewm.service.comment.model.CommentMapper;
 import ru.practicum.ewm.service.comment.repository.CommentRepository;
 import ru.practicum.ewm.service.event.model.Event;
 import ru.practicum.ewm.service.event.repository.EventRepository;
+import ru.practicum.ewm.service.exception.ConflictException;
 import ru.practicum.ewm.service.exception.NotFoundException;
-import ru.practicum.ewm.service.exception.ValidationException;
 import ru.practicum.ewm.service.user.model.User;
 import ru.practicum.ewm.service.user.repository.UserRepository;
 
@@ -54,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
         final Comment comment = getCommentById(commentId);
 
         if (!userId.equals(comment.getAuthor().getId())) {
-            throw new ValidationException("Редактировать комментарий может только его автор");
+            throw new ConflictException("Редактировать комментарий может только его автор");
         }
 
         if (updateCommentDto.getText() != null) {
@@ -73,7 +73,7 @@ public class CommentServiceImpl implements CommentService {
         final Comment comment = getCommentById(commentId);
 
         if (!userId.equals(comment.getAuthor().getId())) {
-            throw new ValidationException("Удалить комментарий может только его автор");
+            throw new ConflictException("Удалить комментарий может только его автор");
         }
         commentRepository.deleteById(commentId);
     }
@@ -110,20 +110,22 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto getById(Long commentId) {
 
-        final Comment comment = getCommentById(commentId);
+        return commentRepository.findById(commentId)
+                .map(CommentMapper::toCommentDto)
+                .orElseThrow(() -> new NotFoundException("Комментарий не найден или недоступен"));
 
-        return CommentMapper.toCommentDto(comment);
     }
 
     @Override
     public List<CommentDto> getByText(String text, Pageable pageable) {
-        if (!text.isBlank()) {
-            return commentRepository.search(text, pageable)
-                    .stream()
-                    .map(CommentMapper::toCommentDto)
-                    .collect(Collectors.toList());
+        if (text.isBlank()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        return commentRepository.search(text, pageable)
+                                .stream()
+                                .map(CommentMapper::toCommentDto)
+                                .collect(Collectors.toList());
+
     }
 
     private Comment getCommentById(Long commentId) {

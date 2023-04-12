@@ -32,33 +32,10 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({MethodArgumentNotValidException.class, MissingServletRequestParameterException.class,
+            BadRequestException.class, ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleBadRequestException(final BadRequestException e) {
-        log.error("400 {} ", e.getMessage(), e);
-
-        return ApiError.builder()
-                .status(ErrorStatus.BAD_REQUEST)
-                .message(e.getLocalizedMessage())
-                .reason("Получены невалидные данные")
-                .build();
-    }
-
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleBadRequestExceptionList(final MissingServletRequestParameterException e) {
-        log.error("400 {} ", e.getMessage(), e);
-
-        return ApiError.builder()
-                .status(ErrorStatus.BAD_REQUEST)
-                .message(e.getLocalizedMessage())
-                .reason("Получены невалидные данные")
-                .build();
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleBadRequestExceptionList(final MethodArgumentNotValidException e) {
+    public ApiError handleBadRequestExceptionList(final Exception e) {
         log.error("400 {} ", e.getMessage(), e);
 
         return ApiError.builder()
@@ -80,9 +57,9 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler
+    @ExceptionHandler({DataIntegrityViolationException.class, ConflictException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConflictRequestException(final DataIntegrityViolationException e) {
+    public ApiError handleConflictRequestException(final Exception e) {
         log.info("409: {} ", e.getMessage(), e);
 
         return ApiError.builder()
@@ -92,17 +69,6 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleValidationException(final ValidationException e) {
-        log.info("409: {} ", e.getMessage(), e);
-
-        return ApiError.builder()
-                .status(ErrorStatus.CONFLICT)
-                .message(e.getLocalizedMessage())
-                .reason("В запросе невалидные значения для БД")
-                .build();
-    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

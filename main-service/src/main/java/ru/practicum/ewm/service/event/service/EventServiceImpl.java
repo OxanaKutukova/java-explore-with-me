@@ -52,19 +52,19 @@ public class EventServiceImpl implements EventService {
         if (updateEventDto.getEventDate() != null) {
             if (MainServiceDateTimeFormatter.stringToDateTime(updateEventDto.getEventDate())
                     .isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new ValidationException("Дата и время начала события не может быть раньше, " +
+                throw new ConflictException("Дата и время начала события не может быть раньше, " +
                         "чем через два часа от текущего момента");
             }
         }
         if (updateEventDto.getStateAction().equals("PUBLISH_EVENT")) {
             if (!event.getStatus().equals(EventStatus.PENDING)) {
-                throw new ValidationException("Событие можно публиковать, только если оно в состоянии ожидания публикации");
+                throw new ConflictException("Событие можно публиковать, только если оно в состоянии ожидания публикации");
             }
             event.setStatus(EventStatus.PUBLISHED);
         }
         if (updateEventDto.getStateAction().equals("REJECT_EVENT")) {
             if (event.getStatus().equals(EventStatus.PUBLISHED)) {
-                throw new ValidationException("Событие можно отклонить, только если оно еще не опубликовано");
+                throw new ConflictException("Событие можно отклонить, только если оно еще не опубликовано");
             }
             event.setStatus(EventStatus.CANCELED);
         }
@@ -89,12 +89,12 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getAllAdmin(List<Long> users,
                                           List<String> states,
                                           List<Long> categories,
-                                          Optional<String> rangeStart,
-                                          Optional<String> rangeEnd,
+                                          String rangeStart,
+                                          String rangeEnd,
                                           Pageable pageable) {
 
         //Соберем фильтр из пришедших условий
-        BooleanBuilder builder = makeBuilder(users, states, categories, Optional.empty(), Optional.empty(),
+        BooleanBuilder builder = makeBuilder(users, states, categories, null, null,
                 rangeStart, rangeEnd);
          List<Event> events = eventRepository.findAll(builder, pageable)
                 .stream()
@@ -107,13 +107,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getAllPublic(Optional<String> text,
+    public List<EventShortDto> getAllPublic(String text,
                                             List<Long> categories,
-                                            Optional<Boolean> paid,
-                                            Optional<String> rangeStart,
-                                            Optional<String> rangeEnd,
-                                            Optional<Boolean> onlyAvailable,
-                                            Optional<String> sort,
+                                            Boolean paid,
+                                            String rangeStart,
+                                            String rangeEnd,
+                                            Boolean onlyAvailable,
+                                            String sort,
                                             HttpServletRequest httpRequest,
                                             Pageable pageable) {
 
@@ -169,7 +169,7 @@ public class EventServiceImpl implements EventService {
         }
 
         //Сделаем сортировку, если она задана
-        if (sort.isPresent()) {
+        if (sort != null) {
             switch (sort.toString().toUpperCase()) {
                 case "EVENT_DATE":
                     events.sort(Comparator.comparing(Event::getEventDate));
@@ -242,7 +242,7 @@ public class EventServiceImpl implements EventService {
         final User user = getUserById(userId);
         if (MainServiceDateTimeFormatter.stringToDateTime(newEventDto.getEventDate())
                 .isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationException("Дата и время начала события не может быть раньше, " +
+            throw new ConflictException("Дата и время начала события не может быть раньше, " +
                     "чем через два часа от текущего момента");
         }
         Event eventU = EventMapper.toEvent(newEventDto);
@@ -270,7 +270,7 @@ public class EventServiceImpl implements EventService {
         if (updateEventUserRequest.getEventDate() != null) {
             if (MainServiceDateTimeFormatter.stringToDateTime(updateEventUserRequest.getEventDate())
                     .isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new ValidationException("Дата и время начала события не может быть раньше, " +
+                throw new ConflictException("Дата и время начала события не может быть раньше, " +
                         "чем через два часа от текущего момента");
             }
         }
@@ -278,17 +278,17 @@ public class EventServiceImpl implements EventService {
         final Event event = getEventById(eventId);
 
         if (!userId.equals(event.getInitiator().getId())) {
-            throw new ValidationException("Редактировать событие может только его инициатор");
+            throw new ConflictException("Редактировать событие может только его инициатор");
         }
         if (event.getStatus() == EventStatus.PUBLISHED) {
-            throw new ValidationException("Редактировать можно только отмененные события или события, которые находятся" +
+            throw new ConflictException("Редактировать можно только отмененные события или события, которые находятся" +
                     " на модерации");
         }
 
         if (updateEventUserRequest.getStateAction() != null) {
             if (!(updateEventUserRequest.getStateAction().toUpperCase().equals("SEND_TO_REVIEW") ||
                     updateEventUserRequest.getStateAction().toUpperCase().equals("CANCEL_REVIEW"))) {
-                throw new ValidationException("Переданы некорректные данные в значении параметра stateAction");
+                throw new ConflictException("Переданы некорректные данные в значении параметра stateAction");
             }
         }
 
@@ -339,23 +339,23 @@ public class EventServiceImpl implements EventService {
             throw new ForbiddenException("Редактировать событие может только его инициатор");
         }
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
-            throw new ValidationException("Этому запросу нельзя изменить статус");
+            throw new ConflictException("Этому запросу нельзя изменить статус");
         }
 
         final String status = eventRequestStatusUpdateRequest.getStatus();
         if (status.equals("CONFIRMED")) {
             if (event.getParticipantLimit() == event.getConfirmedRequests()) {
-                throw new ValidationException("Достигнут лимит запросов на участие в событии");
+                throw new ConflictException("Достигнут лимит запросов на участие в событии");
             }
 
             for (int i = 0; i < eventRequestStatusUpdateRequest.getRequestIds().length; i++) {
 
                 final Request request = getRequestById(eventRequestStatusUpdateRequest.getRequestIds()[i]);
                 if (!request.getStatus().equals(RequestStatus.PENDING)) {
-                    throw new ValidationException("Запрос не в статусе ожидания");
+                    throw new ConflictException("Запрос не в статусе ожидания");
                 }
                 if (!request.getEvent().getId().equals(event.getId())) {
-                    throw new ValidationException("Запрос не соответствует событию");
+                    throw new ConflictException("Запрос не соответствует событию");
                 }
 
                 request.setStatus(RequestStatus.CONFIRMED);
@@ -378,10 +378,10 @@ public class EventServiceImpl implements EventService {
                 final Request request = getRequestById(eventRequestStatusUpdateRequest.getRequestIds()[i]);
 
                 if (!request.getStatus().equals(RequestStatus.PENDING)) {
-                    throw new ValidationException("Запрос не в статусе ожидания");
+                    throw new ConflictException("Запрос не в статусе ожидания");
                 }
                 if (!request.getEvent().getId().equals(event.getId())) {
-                    throw new ValidationException("Запрос не соответствует событию");
+                    throw new ConflictException("Запрос не соответствует событию");
                 }
                 request.setStatus(RequestStatus.REJECTED);
                 requestRepository.save(request);
@@ -408,10 +408,10 @@ public class EventServiceImpl implements EventService {
     private BooleanBuilder makeBuilder(List<Long> users,
                                        List<String> states,
                                        List<Long> categories,
-                                       Optional<String> text,
-                                       Optional<Boolean> paid,
-                                       Optional<String> rangeStart,
-                                       Optional<String> rangeEnd) {
+                                       String text,
+                                       Boolean paid,
+                                       String rangeStart,
+                                       String rangeEnd) {
 
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -430,16 +430,25 @@ public class EventServiceImpl implements EventService {
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList())));
         }
-        text.ifPresent(textS -> builder.and(QEvent.event.annotation.likeIgnoreCase(textS)
-                .or(QEvent.event.description.likeIgnoreCase(textS))));
 
-        paid.ifPresent(paidS -> builder.and(QEvent.event.paid.eq(paidS)));
+        if (text != null && !text.isEmpty()) {
+            builder.and(QEvent.event.annotation.likeIgnoreCase(text)
+                    .or(QEvent.event.description.likeIgnoreCase(text)));
+        }
 
-        rangeStart.ifPresent(start -> builder.and(QEvent.event.eventDate
-                .after(MainServiceDateTimeFormatter.stringToDateTime(start))));
+        if (rangeStart != null && !rangeStart.isEmpty()) {
+            builder.and(QEvent.event.eventDate
+                    .after(MainServiceDateTimeFormatter.stringToDateTime(rangeStart)));
+        }
 
-        rangeEnd.ifPresent(end -> builder.and(QEvent.event.eventDate
-                .before(MainServiceDateTimeFormatter.stringToDateTime(end))));
+        if (rangeEnd != null && !rangeEnd.isEmpty()) {
+            builder.and(QEvent.event.eventDate
+                    .before(MainServiceDateTimeFormatter.stringToDateTime(rangeEnd)));
+        }
+
+        if (paid != null) {
+            builder.and(QEvent.event.paid.eq(paid));
+        }
 
         return builder;
 

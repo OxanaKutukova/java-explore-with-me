@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.client.stats.StatsClient;
@@ -18,7 +19,6 @@ import ru.practicum.ewm.service.request.dto.RequestDto;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 
 @RestController
@@ -46,8 +46,8 @@ public class EventController {
     public List<EventFullDto> getAllAdmin(@RequestParam (required = false) List<Long> users,
                                           @RequestParam (required = false) List<String> states,
                                           @RequestParam (required = false) List<Long> categories,
-                                          @RequestParam (required = false) Optional<String> rangeStart,
-                                          @RequestParam (required = false) Optional<String> rangeEnd,
+                                          @RequestParam (required = false) String rangeStart,
+                                          @RequestParam (required = false) String rangeEnd,
                                           @RequestParam(name = "from", defaultValue = "0") int from,
                                           @RequestParam(name = "size", defaultValue = "10") int size) {
 
@@ -61,16 +61,16 @@ public class EventController {
 
     //Public Получение событий с возможностью фильтрации
     @GetMapping("/events")
-    public List<EventShortDto> getAllPublic(@RequestParam (required = false) Optional<String> text,
-                                      @RequestParam (required = false) List<Long> categories,
-                                      @RequestParam Optional<Boolean> paid,
-                                      @RequestParam Optional<String> rangeStart,
-                                      @RequestParam Optional<String> rangeEnd,
-                                      @RequestParam Optional<Boolean> onlyAvailable,
-                                      @RequestParam Optional<String> sort,
-                                      @RequestParam(name = "from", defaultValue = "0") int from,
-                                      @RequestParam(name = "size", defaultValue = "10") int size,
-                                      HttpServletRequest httpRequest) {
+    public List<EventShortDto> getAllPublic(@RequestParam (required = false) @Nullable String text,
+                                            @RequestParam (required = false) List<Long> categories,
+                                            @RequestParam @Nullable Boolean paid,
+                                            @RequestParam @Nullable String rangeStart,
+                                            @RequestParam @Nullable String rangeEnd,
+                                            @RequestParam @Nullable Boolean onlyAvailable,
+                                            @RequestParam @Nullable String sort,
+                                            @RequestParam(name = "from", defaultValue = "0") int from,
+                                            @RequestParam(name = "size", defaultValue = "10") int size,
+                                            HttpServletRequest httpRequest) {
 
         log.info("MainServer: Public Получить все события с возможностью фильтрации");
         final Pageable pageable = PageRequest.of(from / size, size);
