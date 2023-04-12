@@ -25,7 +25,7 @@ public class RequestController {
     //Добавить запрос от пользователя на участие в событии
     @PostMapping("/users/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
-    public RequestDto create(@PathVariable (required = true) Long userId,
+    public RequestDto create(@PathVariable Long userId,
                              @Valid @RequestParam(name = "eventId", required = true)  Long eventId) {
         log.info("MainServer: Добавить запрос от пользователя с id: {} на участие в событии с id: {}", userId, eventId);
         RequestDto resRequestDto = requestService.create(userId, eventId);

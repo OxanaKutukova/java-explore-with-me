@@ -6,10 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.service.event.model.Event;
 import ru.practicum.ewm.service.event.model.EventStatus;
 import ru.practicum.ewm.service.event.repository.EventRepository;
-import ru.practicum.ewm.service.exception.BadRequestException;
-import ru.practicum.ewm.service.exception.ForbiddenException;
-import ru.practicum.ewm.service.exception.NotFoundException;
-import ru.practicum.ewm.service.exception.ValidationException;
+import ru.practicum.ewm.service.exception.*;
 import ru.practicum.ewm.service.request.dto.RequestDto;
 import ru.practicum.ewm.service.request.model.Request;
 import ru.practicum.ewm.service.request.model.RequestMapper;
@@ -40,16 +37,16 @@ public class RequestServiceImp implements RequestService {
         final Event event = getEventById(eventId);
 
         if (event.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Нельзя добавить запрос на участие в своем событии");
+            throw new ConflictException("Нельзя добавить запрос на участие в своем событии");
         }
         if (!requestRepository.findByEvent_IdAndRequesterId(eventId, userId).isEmpty()) {
-            throw new ValidationException("Нельзя добавить повторный запрос");
+            throw new ConflictException("Нельзя добавить повторный запрос");
         }
         if (event.getStatus() != EventStatus.PUBLISHED) {
-            throw new ValidationException("Нельзя участвовать в неопубликованном событии");
+            throw new ConflictException("Нельзя участвовать в неопубликованном событии");
         }
         if (event.getConfirmedRequests() == event.getParticipantLimit()) {
-            throw new ValidationException("Достигнут лимит запросов на участие");
+            throw new ConflictException("Достигнут лимит запросов на участие");
         }
 
         Request request = new Request();
